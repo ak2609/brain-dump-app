@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Switch, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { View, Text, Switch, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { loadSettings, saveSettings } from '../storage/taskStorage';
 import { requestPermissions } from '../utils/notificationUtils';
 
 export default function SettingsScreen() {
+  const insets = useSafeAreaInsets();
   const [settings, setSettings] = useState({
     notificationsEnabled: false,
     defaultReminderOffset: '1h',
@@ -35,7 +37,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, 20), paddingBottom: Math.max(insets.bottom, 20) }]}>
       <Text style={styles.header}>Notification Preferences</Text>
       
       <View style={styles.row}>
@@ -66,7 +68,7 @@ export default function SettingsScreen() {
         When tasks have a due date but no explicit reminder, we will automatically schedule one this duration before the deadline.
       </Text>
       
-    </SafeAreaView>
+    </View>
   );
 }
 

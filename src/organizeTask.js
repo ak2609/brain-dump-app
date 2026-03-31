@@ -1,25 +1,24 @@
 // organizeTask.js
-// This is the core AI logic file. It handles:
-// 1. Fetching past corrections from Supabase (memory)
-// 2. Building a smart prompt that includes those corrections (teaching)
-// 3. Calling OpenAI and parsing the response (intelligence)
-
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
   apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true, // Required for React Native environments
+  dangerouslyAllowBrowser: true, 
 });
 
-// This function takes:
-// - inputText: the raw brain dump string from the user
-// - corrections: an array of past corrections fetched from Supabase
-// It returns: an array of { task, category, urgent } objects
-
-export async function organizeBrainDump(inputText, corrections = []) {
+export async function organizeBrainDump(inputText, corrections = [], customTags = []) {
   
-  // Build the "learning examples" section of the prompt.
-  // If the user has never made corrections, this section will just be empty.
+  const baseCategories = ['Unsorted', 'Work', 'Personal', 'Groceries', 'Health', 'Finance', 'Ideas', 'Urgent', 'Other'];
+  const allCategories = [...baseCategories, ...(customTags || []).map(t => t.name)].join(', ');
+
+  let customCategoriesText = '';
+  if (customTags && customTags.length > 0) {
+    customCategoriesText = `
+User-defined custom categories:
+${customTags.map(tag => `- ${tag.name}: ${tag.description}`).join('\n')}
+    `;
+  }
+
   let correctionExamples = '';
   if (corrections.length > 0) {
     correctionExamples = `
@@ -31,47 +30,53 @@ ${corrections
     `;
   }
 
-  // The system prompt is what tells the AI who it is and what its job is.
-  // We inject the user's correction history here dynamically.
   const systemPrompt = `
-You are a task extraction and categorization assistant. 
-Extract every individual task from the user's brain dump text and assign each 
-one to the most appropriate category.
+You are a highly advanced task extraction and categorization assistant.
+Current Date and TimeContext: ${new Date().toISOString()}
 
-Available categories: Work, Personal, Groceries, Health, Finance, Ideas, Urgent, Other.
+Extract every individual task from the user's brain dump text and assign each 
+one to the most appropriate category and schema.
+
+Available categories: ${allCategories}
+If you cannot confidently classify a task, assign it to "Unsorted".
 
 Rules:
-- Extract EVERY task or to-do, even vague ones
-- If something is time-sensitive (deadline today or tomorrow), set urgent to true
-- Return ONLY a valid JSON array, no explanation, no markdown, no extra text
-- Each item must have: task (string), category (string), urgent (boolean)
+- Extract EVERY task or to-do, even vague ones. Deduplicate identical tasks silently.
+- Translate natural language dates ("tomorrow at 5pm", "next Sunday") into strict ISO 8601 strings relative to the provided Current Date.
+- Return ONLY a valid JSON array of objects, no explanation, no markdown.
+
+Task Schema (MUST MATCH EXACTLY):
+{
+  "task": string (The task title, capitalized reasonably),
+  "category": string (From the allowed categories),
+  "priority": "High" | "Medium" | "Low",
+  "dueDate": string (ISO 8601 format) or null if not stated,
+  "hasTime": boolean (true if the user specified an explicit time like 5pm, false if just a date like "tomorrow"),
+  "recurring": "daily" | "weekly" | "monthly" | "weekdays" | null,
+  "confidence": number (float between 0.0 and 1.0 indicating confidence in the chosen category)
+}
+
+${customCategoriesText}
 
 ${correctionExamples}
   `;
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Fast and cheap — perfect for this use case
-      max_tokens: 1000,
-      temperature: 0.2, // Low temperature = consistent, predictable categorization
+      model: 'gpt-4o-mini', 
+      temperature: 0.1, 
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: inputText },
       ],
     });
 
-    // The AI response comes back as a string. We need to parse it into a JS array.
     const rawText = response.choices[0].message.content.trim();
-    
-    // Strip any accidental markdown code fences the model might add
     const cleanText = rawText.replace(/```json|```/g, '').trim();
     
-    const tasks = JSON.parse(cleanText);
-    return tasks;
-
+    return JSON.parse(cleanText);
   } catch (error) {
     console.error('OpenAI call failed:', error);
-    // Return empty array rather than crashing the app
     return [];
   }
 }

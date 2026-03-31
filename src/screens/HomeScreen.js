@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: 'white', fontSize: 16, fontWeight: '700' },
   subActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16, marginBottom: 12 },
-  manageTagsBtn: { alignItems: 'center' },
+  manageTagsBtn: { alignItems: 'center', minWidth: 44, minHeight: 44, justifyContent: 'center' },
   manageTagsText: { color: '#6B7280', fontWeight: '600', fontSize: 14 },
   dashboardSection: { marginTop: 10 }
 });

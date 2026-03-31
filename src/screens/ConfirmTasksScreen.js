@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { loadTasks, saveTasks, loadSettings } from '../storage/taskStorage';
 import { applyReminderOffset } from '../utils/dateUtils';
 import { scheduleReminder } from '../utils/notificationUtils';
 
 export default function ConfirmTasksScreen({ route, navigation }) {
   const { newTasks } = route.params;
+  const insets = useSafeAreaInsets();
 
   const handleConfirm = async () => {
     // 1. Load active tasks for deduplication
@@ -66,26 +68,38 @@ export default function ConfirmTasksScreen({ route, navigation }) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, 20), paddingBottom: Math.max(insets.bottom, 20) }]}>
       <Text style={styles.header}>Extracted {newTasks.length} tasks</Text>
       <Text style={styles.sub}>Review them before we save them to your list.</Text>
 
-      <FlatList
-        data={newTasks}
-        keyExtractor={(_, i) => i.toString()}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 20 }}
-      />
+      {newTasks.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyEmoji}>🤔</Text>
+          <Text style={styles.emptyText}>No tasks extracted. Try adding more detail to your brain dump.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={newTasks}
+          keyExtractor={(_, i) => i.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          style={styles.list}
+        />
+      )}
 
       <View style={styles.actionRow}>
         <TouchableOpacity style={[styles.btn, styles.cancelBtn]} onPress={handleUndo}>
           <Text style={styles.cancelColor}>Undo</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.btn, styles.confirmBtn]} onPress={handleConfirm}>
+        <TouchableOpacity 
+          style={[styles.btn, styles.confirmBtn, newTasks.length === 0 && styles.disabledBtn]} 
+          onPress={handleConfirm}
+          disabled={newTasks.length === 0}
+        >
           <Text style={styles.confirmColor}>Confirm Add</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -98,10 +112,15 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 8, marginBottom: 6 },
   badge: { backgroundColor: '#F3F4F6', color: '#4B5563', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, fontSize: 12, fontWeight: '600', overflow: 'hidden' },
   dateInfo: { fontSize: 12, color: '#9CA3AF' },
+  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  emptyEmoji: { fontSize: 40, marginBottom: 16 },
+  emptyText: { color: '#6B7280', fontSize: 16, textAlign: 'center', paddingHorizontal: 20 },
+  list: { flex: 1 },
   actionRow: { flexDirection: 'row', gap: 12, marginTop: 'auto', paddingTop: 10 },
-  btn: { flex: 1, padding: 16, borderRadius: 12, alignItems: 'center' },
-  cancelBtn: { backgroundColor: '#F3F4F6' },
-  confirmBtn: { backgroundColor: '#4F46E5' },
+  btn: { flex: 1, padding: 16, borderRadius: 12, alignItems: 'center', minHeight: 44, justifyContent: 'center', borderWidth: 1 },
+  cancelBtn: { backgroundColor: '#F3F4F6', borderColor: 'transparent' },
+  confirmBtn: { backgroundColor: 'transparent', borderColor: '#4F46E5' },
+  disabledBtn: { opacity: 0.5 },
   cancelColor: { color: '#374151', fontWeight: '700', fontSize: 16 },
-  confirmColor: { color: 'white', fontWeight: '700', fontSize: 16 }
+  confirmColor: { color: '#4F46E5', fontWeight: '700', fontSize: 16 }
 });

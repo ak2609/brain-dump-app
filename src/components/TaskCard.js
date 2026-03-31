@@ -70,7 +70,7 @@ export default function TaskCard({ item, onComplete, onUpdate }) {
 
   // Display State
   return (
-    <View style={[styles.card, overdue && styles.overdueCard]}>
+    <View style={[styles.card, overdue && !item.completed && styles.overdueCard, item.completed && styles.completedCard]}>
       {/* Top Meta Row */}
       <View style={styles.metaRow}>
         <View style={styles.badgesWrapper}>
@@ -112,10 +112,10 @@ export default function TaskCard({ item, onComplete, onUpdate }) {
       {!item.completed && (
         <View style={styles.cardActions}>
           <TouchableOpacity style={styles.actionBtn} onPress={() => onComplete(item)}>
-            <Text style={styles.actionGreen}>✓ Complete</Text>
+            <Text style={styles.actionGreen}>○</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn} onPress={() => setEditing(true)}>
-            <Text style={styles.actionGray}>✎ Edit</Text>
+            <Text style={styles.actionGray}>✎</Text>
           </TouchableOpacity>
           {item.reminderDate && (
             <TouchableOpacity style={styles.actionBtn} onPress={async () => {
@@ -123,7 +123,7 @@ export default function TaskCard({ item, onComplete, onUpdate }) {
                await snoozeReminder(item, 60); // snooze 1 hour
                alert('Snoozed for 1 hour');
             }}>
-              <Text style={styles.actionBlue}>⏰ Snooze 1h</Text>
+              <Text style={styles.actionBlue}>⏰ 1h</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -135,6 +135,7 @@ export default function TaskCard({ item, onComplete, onUpdate }) {
 const styles = StyleSheet.create({
   card: { backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#F3F4F6' },
   overdueCard: { borderLeftWidth: 4, borderLeftColor: '#EF4444' },
+  completedCard: { opacity: 0.5 },
   editCard: { backgroundColor: '#F9FAFB', borderColor: '#D1D5DB' },
   
   metaRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' },
@@ -151,20 +152,20 @@ const styles = StyleSheet.create({
   timelineRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4, marginBottom: 10 },
   timelineChip: { backgroundColor: '#F8FAFC', color: '#475569', fontSize: 12, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, overflow: 'hidden' },
   
-  cardActions: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 10, marginTop: 4, gap: 16 },
-  actionBtn: { flexDirection: 'row', alignItems: 'center' },
-  actionGreen: { color: '#059669', fontWeight: '600', fontSize: 13 },
-  actionGray: { color: '#6B7280', fontWeight: '600', fontSize: 13 },
-  actionBlue: { color: '#2563EB', fontWeight: '600', fontSize: 13 },
+  cardActions: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 6, marginTop: 4, gap: 16 },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minWidth: 44, minHeight: 44 },
+  actionGreen: { color: '#059669', fontWeight: '800', fontSize: 22 },
+  actionGray: { color: '#6B7280', fontWeight: '800', fontSize: 20 },
+  actionBlue: { color: '#2563EB', fontWeight: '600', fontSize: 15 },
 
   // Edit Styles
   editInput: { backgroundColor: 'white', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, padding: 10, fontSize: 15, minHeight: 60, textAlignVertical: 'top', marginBottom: 10 },
   editRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  editBadge: { backgroundColor: '#E5E7EB', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
+  editBadge: { backgroundColor: '#E5E7EB', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   editBadgeText: { color: '#374151', fontWeight: '600', fontSize: 13 },
   actionRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },
-  cancelBtn: { padding: 10 },
+  cancelBtn: { padding: 10, minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   cancelText: { color: '#4B5563', fontWeight: '600' },
-  saveBtn: { backgroundColor: '#4F46E5', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
+  saveBtn: { backgroundColor: '#4F46E5', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8, minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   saveText: { color: 'white', fontWeight: '700' }
 });

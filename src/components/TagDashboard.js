@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 const DEFAULT_CATEGORY_COLORS = {
   Work: '#4F46E5', Personal: '#7C3AED', Groceries: '#059669',
@@ -21,6 +22,7 @@ function getColorForTag(tag) {
 }
 
 export default function TagDashboard({ tasks }) {
+  const { colors, isDark } = useTheme();
   const activeTasks = tasks.filter(t => !t.completed);
   
   const counts = activeTasks.reduce((acc, task) => {
@@ -34,14 +36,19 @@ export default function TagDashboard({ tasks }) {
     return null;
   }
 
+  const shadowStyle = isDark ? 
+    { elevation: 1, borderWidth: 1, borderColor: colors.borderDark } : 
+    { shadowColor: colors.shadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 3 };
+
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Active Tasks Overview</Text>
+      <Text style={[styles.header, { color: colors.text }]}>Active Tasks Overview</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scroll}>
         {sortedCategories.map(category => (
           <View 
             key={category} 
-            style={[styles.tagCard, { backgroundColor: getColorForTag(category) }]}
+            style={[styles.tagCard, shadowStyle, { backgroundColor: getColorForTag(category) }]}
           >
             <Text style={styles.tagCount}>{counts[category]}</Text>
             <Text style={styles.tagName}>{category}</Text>
@@ -60,7 +67,6 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
     marginBottom: 10,
     paddingHorizontal: 20,
   },
@@ -75,11 +81,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 80,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
   },
   tagCount: {
     color: 'white',

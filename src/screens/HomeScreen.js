@@ -1,13 +1,16 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, SafeAreaView, Alert, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { organizeBrainDump } from '../organizeTask';
 import TimelineDashboard from '../components/TimelineDashboard';
 import TaskList from '../components/TaskList';
 import CustomTagModal from '../components/CustomTagModal';
 import { loadTasks, saveTasks, loadTags, saveTags } from '../storage/taskStorage';
+import { useTheme } from '../context/ThemeContext';
 
 export default function HomeScreen({ navigation }) {
+  const { colors } = useTheme();
   const [brainDump, setBrainDump] = useState('');
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,7 +18,6 @@ export default function HomeScreen({ navigation }) {
   const [customTags, setCustomTags] = useState([]);
   const [tagModalVisible, setTagModalVisible] = useState(false);
 
-  // Reload data when arriving from Settings or Confirm pages
   useFocusEffect(
     useCallback(() => {
       async function init() {
@@ -39,7 +41,6 @@ export default function HomeScreen({ navigation }) {
       setBrainDump('');
       
       if (organized.length > 0) {
-        // Send them to the Confirm page to validate deduplication & notification configs
         navigation.navigate('ConfirmTasks', { newTasks: organized });
       } else {
         Alert.alert('No tasks found', 'We could not detect any actionable tasks.');
@@ -77,7 +78,6 @@ export default function HomeScreen({ navigation }) {
     ]);
   };
 
-  // Tag Modal actions
   const handleSaveTag = async (newTag) => {
     if (!customTags.find(t => t.name.toLowerCase() === newTag.name.toLowerCase())) {
       const newTags = [...customTags, newTag];
@@ -95,37 +95,40 @@ export default function HomeScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.header}>Brain Dump</Text>
-            <Text style={styles.subheader}>Throw everything in. We'll sort it out.</Text>
+            <Text style={[styles.header, { color: colors.text }]}>Brain Dump</Text>
+            <Text style={[styles.subheader, { color: colors.textSecondary }]}>Throw everything in. We'll sort it out.</Text>
           </View>
-          <TouchableOpacity style={styles.settingsIcon} onPress={() => navigation.navigate('Settings')}>
-            <Text style={styles.settingsText}>⚙️</Text>
+          <TouchableOpacity 
+            style={[styles.settingsIcon, { backgroundColor: colors.interactive }]} 
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <Ionicons name="settings-outline" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
 
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.text, borderColor: colors.borderDark, shadowColor: colors.shadow }]}
           multiline
           numberOfLines={6}
           placeholder="e.g. Need to finish the pitch deck by Friday 4pm, buy milk, call the dentist on Sunday..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textMuted}
           value={brainDump}
           onChangeText={setBrainDump}
           textAlignVertical="top"
         />
 
-        <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleOrganize} disabled={loading}>
+        <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }, loading && styles.buttonDisabled]} onPress={handleOrganize} disabled={loading}>
           {loading ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>Organize ✨</Text>}
         </TouchableOpacity>
 
         <View style={styles.subActions}>
           <TouchableOpacity style={styles.manageTagsBtn} onPress={() => setTagModalVisible(true)}>
-            <Text style={styles.manageTagsText}>+ Custom Tags</Text>
+            <Text style={[styles.manageTagsText, { color: colors.textSecondary }]}>+ Custom Tags</Text>
           </TouchableOpacity>
         </View>
 
@@ -154,26 +157,25 @@ export default function HomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1 },
   scrollContent: { padding: 20, paddingBottom: 40 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  header: { fontSize: 28, fontWeight: '800', color: '#111827', marginBottom: 4 },
-  subheader: { fontSize: 14, color: '#6B7280', marginBottom: 20 },
-  settingsIcon: { padding: 8, backgroundColor: '#E5E7EB', borderRadius: 20 },
-  settingsText: { fontSize: 18 },
+  header: { fontSize: 28, fontWeight: '800', marginBottom: 4 },
+  subheader: { fontSize: 14, marginBottom: 20 },
+  settingsIcon: { padding: 8, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
   input: {
-    backgroundColor: 'white', borderRadius: 12, padding: 16,
-    fontSize: 15, color: '#374151', minHeight: 120,
-    borderWidth: 1, borderColor: '#E5E7EB',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    borderRadius: 12, padding: 16,
+    fontSize: 15, minHeight: 120,
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05, shadowRadius: 3, elevation: 2,
     marginBottom: 16,
   },
-  button: { backgroundColor: '#4F46E5', borderRadius: 12, padding: 16, alignItems: 'center' },
+  button: { borderRadius: 12, padding: 16, alignItems: 'center' },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: 'white', fontSize: 16, fontWeight: '700' },
   subActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16, marginBottom: 12 },
   manageTagsBtn: { alignItems: 'center', minWidth: 44, minHeight: 44, justifyContent: 'center' },
-  manageTagsText: { color: '#6B7280', fontWeight: '600', fontSize: 14 },
+  manageTagsText: { fontWeight: '600', fontSize: 14 },
   dashboardSection: { marginTop: 10 }
 });

@@ -9,6 +9,7 @@ const DEFAULT_SETTINGS = {
   defaultReminderOffset: '1h',
   quietHoursStart: '22:00',
   quietHoursEnd: '08:00',
+  themeMode: 'system',
 };
 
 export async function loadTasks() {

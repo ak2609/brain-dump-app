@@ -4,10 +4,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { loadTasks, saveTasks, loadSettings } from '../storage/taskStorage';
 import { applyReminderOffset } from '../utils/dateUtils';
 import { scheduleReminder } from '../utils/notificationUtils';
+import { useTheme } from '../context/ThemeContext';
 
 export default function ConfirmTasksScreen({ route, navigation }) {
   const { newTasks } = route.params;
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   const handleConfirm = async () => {
     // 1. Load active tasks for deduplication
@@ -55,27 +57,27 @@ export default function ConfirmTasksScreen({ route, navigation }) {
   };
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Text style={styles.title}>{item.task}</Text>
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Text style={[styles.title, { color: colors.text }]}>{item.task}</Text>
       <View style={styles.row}>
-        <Text style={styles.badge}>{item.category || 'Unsorted'}</Text>
-        <Text style={[styles.badge, item.priority === 'High' && { backgroundColor: '#FEE2E2', color: '#B91C1C' }]}>
+        <Text style={[styles.badge, { backgroundColor: colors.border, color: colors.textSecondary }]}>{item.category || 'Unsorted'}</Text>
+        <Text style={[styles.badge, { backgroundColor: colors.interactive, color: colors.textSecondary }, item.priority === 'High' && { backgroundColor: colors.dangerMuted, color: colors.danger }]}>
           {item.priority}
         </Text>
       </View>
-      {item.dueDate ? <Text style={styles.dateInfo}>Due: {new Date(item.dueDate).toLocaleString()}</Text> : null}
+      {item.dueDate ? <Text style={[styles.dateInfo, { color: colors.textMuted }]}>Due: {new Date(item.dueDate).toLocaleString()}</Text> : null}
     </View>
   );
 
   return (
-    <View style={[styles.container, { paddingTop: Math.max(insets.top, 20), paddingBottom: Math.max(insets.bottom, 20) }]}>
-      <Text style={styles.header}>Extracted {newTasks.length} tasks</Text>
-      <Text style={styles.sub}>Review them before we save them to your list.</Text>
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, 20), paddingBottom: Math.max(insets.bottom, 20) }]}>
+      <Text style={[styles.header, { color: colors.text }]}>Extracted {newTasks.length} tasks</Text>
+      <Text style={[styles.sub, { color: colors.textSecondary }]}>Review them before we save them to your list.</Text>
 
       {newTasks.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>🤔</Text>
-          <Text style={styles.emptyText}>No tasks extracted. Try adding more detail to your brain dump.</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No tasks extracted. Try adding more detail to your brain dump.</Text>
         </View>
       ) : (
         <FlatList
@@ -88,15 +90,15 @@ export default function ConfirmTasksScreen({ route, navigation }) {
       )}
 
       <View style={styles.actionRow}>
-        <TouchableOpacity style={[styles.btn, styles.cancelBtn]} onPress={handleUndo}>
-          <Text style={styles.cancelColor}>Undo</Text>
+        <TouchableOpacity style={[styles.btn, styles.cancelBtn, { backgroundColor: colors.interactive }]} onPress={handleUndo}>
+          <Text style={[styles.cancelColor, { color: colors.text }]}>Undo</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.btn, styles.confirmBtn, newTasks.length === 0 && styles.disabledBtn]} 
+          style={[styles.btn, styles.confirmBtn, { borderColor: colors.primary }, newTasks.length === 0 && styles.disabledBtn]} 
           onPress={handleConfirm}
           disabled={newTasks.length === 0}
         >
-          <Text style={styles.confirmColor}>Confirm Add</Text>
+          <Text style={[styles.confirmColor, { color: colors.primary }]}>Confirm Add</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -104,23 +106,23 @@ export default function ConfirmTasksScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB', padding: 20 },
-  header: { fontSize: 24, fontWeight: '800', color: '#111827', marginBottom: 4 },
-  sub: { fontSize: 14, color: '#6B7280', marginBottom: 20 },
-  card: { backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#E5E7EB' },
-  title: { fontSize: 16, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  container: { flex: 1, padding: 20 },
+  header: { fontSize: 24, fontWeight: '800', marginBottom: 4 },
+  sub: { fontSize: 14, marginBottom: 20 },
+  card: { padding: 14, borderRadius: 12, marginBottom: 12, borderWidth: 1 },
+  title: { fontSize: 16, fontWeight: '600', marginBottom: 8 },
   row: { flexDirection: 'row', gap: 8, marginBottom: 6 },
-  badge: { backgroundColor: '#F3F4F6', color: '#4B5563', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, fontSize: 12, fontWeight: '600', overflow: 'hidden' },
-  dateInfo: { fontSize: 12, color: '#9CA3AF' },
+  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, fontSize: 12, fontWeight: '600', overflow: 'hidden' },
+  dateInfo: { fontSize: 12 },
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyEmoji: { fontSize: 40, marginBottom: 16 },
-  emptyText: { color: '#6B7280', fontSize: 16, textAlign: 'center', paddingHorizontal: 20 },
+  emptyText: { fontSize: 16, textAlign: 'center', paddingHorizontal: 20 },
   list: { flex: 1 },
   actionRow: { flexDirection: 'row', gap: 12, marginTop: 'auto', paddingTop: 10 },
   btn: { flex: 1, padding: 16, borderRadius: 12, alignItems: 'center', minHeight: 44, justifyContent: 'center', borderWidth: 1 },
-  cancelBtn: { backgroundColor: '#F3F4F6', borderColor: 'transparent' },
-  confirmBtn: { backgroundColor: 'transparent', borderColor: '#4F46E5' },
+  cancelBtn: { borderColor: 'transparent' },
+  confirmBtn: { backgroundColor: 'transparent' },
   disabledBtn: { opacity: 0.5 },
-  cancelColor: { color: '#374151', fontWeight: '700', fontSize: 16 },
-  confirmColor: { color: '#4F46E5', fontWeight: '700', fontSize: 16 }
+  cancelColor: { fontWeight: '700', fontSize: 16 },
+  confirmColor: { fontWeight: '700', fontSize: 16 }
 });

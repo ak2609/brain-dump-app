@@ -7,17 +7,22 @@ import HomeScreen from './src/screens/HomeScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import ConfirmTasksScreen from './src/screens/ConfirmTasksScreen';
 
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+
 const Stack = createNativeStackNavigator();
 
-export default function App() {
+function RootNavigator() {
+  const { colors } = useTheme();
+  
   return (
     <NavigationContainer>
       <Stack.Navigator
         initialRouteName="Home"
         screenOptions={{
-          headerStyle: { backgroundColor: '#F9FAFB' },
+          headerStyle: { backgroundColor: colors.background },
           headerShadowVisible: false,
-          headerTitleStyle: { fontWeight: '700', color: '#111827' },
+          headerTitleStyle: { fontWeight: '700', color: colors.text },
+          headerTintColor: colors.primary,
         }}
       >
         <Stack.Screen 
@@ -30,15 +35,23 @@ export default function App() {
           component={ConfirmTasksScreen} 
           options={{ 
             title: 'Confirm AI Tasks',
-            presentation: 'modal' // Slides up like a modal
+            presentation: 'modal'
           }} 
         />
         <Stack.Screen 
           name="Settings" 
           component={SettingsScreen} 
-          options={{ title: 'Settings' }} 
+          options={{ headerShown: false }} 
         />
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <RootNavigator />
+    </ThemeProvider>
   );
 }

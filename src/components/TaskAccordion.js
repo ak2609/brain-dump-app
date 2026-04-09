@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const DEFAULT_CATEGORY_COLORS = {
   Work: '#4F46E5', Personal: '#7C3AED', Groceries: '#059669',
@@ -17,6 +19,7 @@ function getColorForTag(tag) {
 }
 
 export default function TaskAccordion({ tasks, onToggleComplete, onEditTask, onCategoryPress }) {
+  const { colors } = useTheme();
   const [activeExpanded, setActiveExpanded] = useState(true);
   const [closedExpanded, setClosedExpanded] = useState(true);
 
@@ -24,26 +27,28 @@ export default function TaskAccordion({ tasks, onToggleComplete, onEditTask, onC
   const closedTasks = tasks.filter(t => t.completed);
 
   const renderTaskRow = (item, isClosed) => (
-    <View key={item.id} style={[styles.taskCard, item.urgent && !isClosed && styles.urgentCard]}>
+    <View key={item.id} style={[styles.taskCard, { backgroundColor: colors.card, borderColor: colors.border }, item.urgent && !isClosed && { borderLeftWidth: 3, borderLeftColor: colors.danger }]}>
       
       {/* Checkbox toggle */}
       <TouchableOpacity onPress={() => onToggleComplete(item)} style={styles.checkButton}>
-        <View style={[styles.checkbox, isClosed && styles.checkboxChecked]}>
-          {isClosed && <Text style={styles.checkIcon}>✓</Text>}
-        </View>
+        <Ionicons 
+            name={isClosed ? "checkmark-circle" : "ellipse-outline"} 
+            size={24} 
+            color={isClosed ? colors.success : colors.textMuted} 
+        />
       </TouchableOpacity>
       
       {/* Content */}
       <View style={styles.taskContent}>
-        {item.urgent && !isClosed && <Text style={styles.urgentFlag}>🔴 URGENT</Text>}
-        <Text style={[styles.taskText, isClosed && styles.taskTextClosed]}>
+        {item.urgent && !isClosed && <Text style={[styles.urgentFlag, { color: colors.danger }]}>🔴 URGENT</Text>}
+        <Text style={[styles.taskText, { color: colors.text }, isClosed && [styles.taskTextClosed, { color: colors.textMuted }]]}>
           {item.task}
         </Text>
       </View>
 
       {/* Edit icon */}
       <TouchableOpacity style={styles.editBtn} onPress={() => onEditTask(item)}>
-        <Text style={styles.editBtnText}>✎</Text>
+        <Ionicons name="pencil-outline" size={18} color={colors.textSecondary} />
       </TouchableOpacity>
 
       {/* Category badge */}
@@ -61,18 +66,18 @@ export default function TaskAccordion({ tasks, onToggleComplete, onEditTask, onC
       
       {/* Active Tasks Section */}
       <TouchableOpacity 
-        style={styles.headerRow} 
+        style={[styles.headerRow, { backgroundColor: colors.interactive }]} 
         onPress={() => setActiveExpanded(!activeExpanded)}
         activeOpacity={0.7}
       >
-        <Text style={styles.headerText}>Active ({activeTasks.length})</Text>
-        <Text style={styles.chevron}>{activeExpanded ? '▼' : '▶'}</Text>
+        <Text style={[styles.headerText, { color: colors.text }]}>Active ({activeTasks.length})</Text>
+        <Ionicons name={activeExpanded ? "chevron-down" : "chevron-forward"} size={16} color={colors.textSecondary} />
       </TouchableOpacity>
 
       {activeExpanded && (
         <View style={styles.listSection}>
           {activeTasks.length === 0 ? (
-            <Text style={styles.emptyText}>No active tasks.</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No active tasks.</Text>
           ) : (
             activeTasks.map(t => renderTaskRow(t, false))
           )}
@@ -81,18 +86,18 @@ export default function TaskAccordion({ tasks, onToggleComplete, onEditTask, onC
 
       {/* Closed Tasks Section */}
       <TouchableOpacity 
-        style={[styles.headerRow, styles.closedHeader]} 
+        style={[styles.headerRow, styles.closedHeader, { backgroundColor: colors.borderDark }]} 
         onPress={() => setClosedExpanded(!closedExpanded)}
         activeOpacity={0.7}
       >
-        <Text style={styles.headerText}>Closed ({closedTasks.length})</Text>
-        <Text style={styles.chevron}>{closedExpanded ? '▼' : '▶'}</Text>
+        <Text style={[styles.headerText, { color: colors.textSecondary }]}>Closed ({closedTasks.length})</Text>
+        <Ionicons name={closedExpanded ? "chevron-down" : "chevron-forward"} size={16} color={colors.textSecondary} />
       </TouchableOpacity>
 
       {closedExpanded && (
         <View style={styles.listSection}>
           {closedTasks.length === 0 ? (
-            <Text style={styles.emptyText}>No closed tasks yet.</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No closed tasks yet.</Text>
           ) : (
             closedTasks.map(t => renderTaskRow(t, true))
           )}
@@ -107,37 +112,28 @@ const styles = StyleSheet.create({
   container: { marginTop: 10 },
   headerRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: '#ebeef5', padding: 12, borderRadius: 8, marginBottom: 10,
+    padding: 12, borderRadius: 8, marginBottom: 10,
   },
-  closedHeader: { marginTop: 12, backgroundColor: '#f3f4f6' },
-  headerText: { fontSize: 16, fontWeight: '700', color: '#374151' },
-  chevron: { fontSize: 12, color: '#6b7280', fontWeight: 'bold' },
+  closedHeader: { marginTop: 12 },
+  headerText: { fontSize: 16, fontWeight: '700' },
   listSection: { paddingBottom: 10 },
-  emptyText: { fontStyle: 'italic', color: '#9ca3af', marginLeft: 4 },
+  emptyText: { fontStyle: 'italic', marginLeft: 4 },
   
   taskCard: {
-    backgroundColor: 'white', borderRadius: 10, padding: 12,
+    borderRadius: 10, padding: 12,
     flexDirection: 'row', alignItems: 'center', marginBottom: 8,
-    borderWidth: 1, borderColor: '#F3F4F6',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04, shadowRadius: 2, elevation: 1,
   },
-  urgentCard: { borderLeftWidth: 3, borderLeftColor: '#EF4444' },
   checkButton: { marginRight: 10, padding: 2 },
-  checkbox: {
-    width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#d1d5db',
-    alignItems: 'center', justifyContent: 'center'
-  },
-  checkboxChecked: { backgroundColor: '#48bb78', borderColor: '#48bb78' },
-  checkIcon: { color: 'white', fontSize: 12, fontWeight: 'bold' },
   
   taskContent: { flex: 1, marginRight: 8 },
-  urgentFlag: { fontSize: 10, fontWeight: '700', color: '#EF4444', marginBottom: 2 },
-  taskText: { fontSize: 14, color: '#374151', lineHeight: 20 },
-  taskTextClosed: { color: '#9ca3af', textDecorationLine: 'line-through' },
+  urgentFlag: { fontSize: 10, fontWeight: '700', marginBottom: 2 },
+  taskText: { fontSize: 14, lineHeight: 20 },
+  taskTextClosed: { textDecorationLine: 'line-through' },
   
   editBtn: { paddingHorizontal: 12, paddingVertical: 5 },
-  editBtnText: { fontSize: 16, color: '#6b7280' },
 
   categoryBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
   categoryText: { color: 'white', fontSize: 11, fontWeight: '700' },

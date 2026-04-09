@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import TaskCard from './TaskCard';
 import { isOverdue, isToday, isUpcoming } from '../utils/dateUtils';
+import { useTheme } from '../context/ThemeContext';
 
 export default function TaskList({ tasks, onComplete, onUpdate, onClearCompleted }) {
+  const { colors } = useTheme();
   const [closedExpanded, setClosedExpanded] = useState(false);
 
   const active = tasks.filter(t => !t.completed);
@@ -14,11 +17,11 @@ export default function TaskList({ tasks, onComplete, onUpdate, onClearCompleted
   const upcoming = active.filter(t => isUpcoming(t.dueDate));
   const noDate = active.filter(t => !t.dueDate);
 
-  const renderSection = (title, data, emptyMsg) => {
+  const renderSection = (title, data) => {
     if (data.length === 0) return null;
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>{title}</Text>
         {data.map(t => (
           <TaskCard 
             key={t.id} 
@@ -34,10 +37,10 @@ export default function TaskList({ tasks, onComplete, onUpdate, onClearCompleted
   return (
     <View style={styles.container}>
       {active.length === 0 ? (
-        <View style={styles.emptyMainContainer}>
+        <View style={[styles.emptyMainContainer, { backgroundColor: colors.card, borderColor: colors.borderDark }]}>
           <Text style={styles.emptyMainEmoji}>🪴</Text>
-          <Text style={styles.emptyMainTitle}>All caught up!</Text>
-          <Text style={styles.emptyMainText}>No active tasks right now. Dump your brain above to get started.</Text>
+          <Text style={[styles.emptyMainTitle, { color: colors.text }]}>All caught up!</Text>
+          <Text style={[styles.emptyMainText, { color: colors.textSecondary }]}>No active tasks right now. Dump your brain above to get started.</Text>
         </View>
       ) : (
         <>
@@ -49,26 +52,26 @@ export default function TaskList({ tasks, onComplete, onUpdate, onClearCompleted
       )}
 
       {/* Closed Tasks Section */}
-      <View style={styles.closedSection}>
+      <View style={[styles.closedSection, { borderTopColor: colors.borderDark }]}>
         <TouchableOpacity 
-          style={styles.headerRow} 
+          style={[styles.headerRow, { backgroundColor: colors.interactive }]} 
           onPress={() => setClosedExpanded(!closedExpanded)}
           activeOpacity={0.7}
         >
-          <Text style={styles.headerText}>Completed ({closed.length})</Text>
-          <Text style={styles.chevron}>{closedExpanded ? '▼' : '▶'}</Text>
+          <Text style={[styles.headerText, { color: colors.textSecondary }]}>Completed ({closed.length})</Text>
+          <Ionicons name={closedExpanded ? "chevron-down" : "chevron-forward"} size={16} color={colors.textSecondary} />
         </TouchableOpacity>
 
         {closedExpanded && (
           <View style={styles.listSection}>
             {closed.length > 0 && (
-              <TouchableOpacity style={styles.clearBtn} onPress={onClearCompleted}>
-                <Text style={styles.clearText}>Clear Completed</Text>
+              <TouchableOpacity style={[styles.clearBtn, { backgroundColor: colors.dangerMuted }]} onPress={onClearCompleted}>
+                <Text style={[styles.clearText, { color: colors.danger }]}>Clear Completed</Text>
               </TouchableOpacity>
             )}
 
             {closed.length === 0 ? (
-             <Text style={styles.emptyText}>No closed tasks yet.</Text>
+             <Text style={[styles.emptyText, { color: colors.textMuted }]}>No closed tasks yet.</Text>
             ) : (
              closed.map(t => (
                 <TaskCard 
@@ -89,19 +92,18 @@ export default function TaskList({ tasks, onComplete, onUpdate, onClearCompleted
 const styles = StyleSheet.create({
   container: { marginTop: 10 },
   section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#111827', marginBottom: 12 },
-  emptyMainContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, backgroundColor: 'white', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', borderStyle: 'dashed' },
+  sectionTitle: { fontSize: 18, fontWeight: '800', marginBottom: 12 },
+  emptyMainContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed' },
   emptyMainEmoji: { fontSize: 40, marginBottom: 16 },
-  emptyMainTitle: { fontSize: 18, color: '#111827', fontWeight: '700', marginBottom: 4 },
-  emptyMainText: { fontSize: 14, color: '#6B7280', textAlign: 'center', paddingHorizontal: 20, lineHeight: 20 },
+  emptyMainTitle: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
+  emptyMainText: { fontSize: 14, textAlign: 'center', paddingHorizontal: 20, lineHeight: 20 },
   
-  closedSection: { marginTop: 10, borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingTop: 20 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F3F4F6', padding: 12, borderRadius: 8, marginBottom: 10 },
-  headerText: { fontSize: 16, fontWeight: '700', color: '#374151' },
-  chevron: { fontSize: 12, color: '#6B7280', fontWeight: 'bold' },
+  closedSection: { marginTop: 10, borderTopWidth: 1, paddingTop: 20 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, borderRadius: 8, marginBottom: 10 },
+  headerText: { fontSize: 16, fontWeight: '700' },
   listSection: { paddingBottom: 10 },
-  emptyText: { fontStyle: 'italic', color: '#9CA3AF', marginLeft: 4 },
+  emptyText: { fontStyle: 'italic', marginLeft: 4 },
   
-  clearBtn: { alignSelf: 'flex-end', marginBottom: 12, paddingVertical: 4, paddingHorizontal: 12, backgroundColor: '#FEE2E2', borderRadius: 6 },
-  clearText: { color: '#B91C1C', fontWeight: '600', fontSize: 12 }
+  clearBtn: { alignSelf: 'flex-end', marginBottom: 12, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6 },
+  clearText: { fontWeight: '600', fontSize: 12 }
 });
